@@ -1,0 +1,40 @@
+apiVersion: kubeflow.org/v1beta1
+kind: Experiment
+metadata:
+  name: mnist-hpo
+spec:
+  objective:
+    type: maximize
+    goal: 0.98
+    objectiveMetricName: accuracy
+
+  algorithm:
+    algorithmName: random
+
+  parameters:
+  - name: lr
+    parameterType: double
+    feasibleSpace:
+      min: "0.0001"
+      max: "0.01"
+
+  trialTemplate:
+    primaryContainerName: training-container
+    trialParameters:
+    - name: lr
+      description: Learning rate
+      reference: lr
+
+    trialSpec:
+      apiVersion: batch/v1
+      kind: Job
+      spec:
+        template:
+          spec:
+            containers:
+            - name: training-container
+              image: trainer:latest
+              env:
+              - name: LR
+                value: "${trialParameters.lr}"
+            restartPolicy: Never

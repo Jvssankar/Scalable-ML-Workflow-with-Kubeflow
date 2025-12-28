@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: mnist-pipeline-
+spec:
+  entrypoint: ml-pipeline
+  templates:
+  - name: ml-pipeline
+    dag:
+      tasks:
+      - name: preprocess
+        template: preprocess
+      - name: train
+        dependencies: [preprocess]
+        template: train
+
+  - name: preprocess
+    container:
+      image: preprocess:latest
+      volumeMounts:
+      - name: data
+        mountPath: /data
+
+  - name: train
+    container:
+      image: trainer:latest
+      volumeMounts:
+      - name: data
+        mountPath: /data
+      - name: model
+        mountPath: /model
+
+  volumes:
+  - name: data
+    emptyDir: {}
+  - name: model
+    emptyDir: {}
